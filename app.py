@@ -8,11 +8,14 @@ documents = SimpleDirectoryReader('documents').load_data()
 
 index = VectorStoreIndex.from_documents(documents)
 
-llm = Ollama(model="llama3.1:8b", request_timeout=60.0)
+llm = Ollama(model="statutes-assitant:latest", request_timeout=60.0)
 
 chat_engine = index.as_chat_engine(
     verbose=True,
     llm=llm,
+    similarity_top_k=3,
+    response_mode="compact",
+    streaming=False,  
 )
 
 chat_engine.chat_repl()
