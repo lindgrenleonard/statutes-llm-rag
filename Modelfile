@@ -1,8 +1,8 @@
-FROM llama3.1:8b-instruct-q6_K
+FROM qwen3.5:4b
 
 PARAMETER temperature 0.3
-PARAMETER top_k 20         
-PARAMETER top_p 0.9        
+PARAMETER top_k 20
+PARAMETER top_p 0.9
 PARAMETER repeat_penalty 1.2
 
 SYSTEM """"
