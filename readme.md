@@ -5,6 +5,8 @@
 
 # IT Chapter Statutes Chatbot
 
+H.U.G.O - Helpful Unicode Grep Oracle
+
 This is a chatbot designed to help you quickly find answers from the **Statutes of the Information Technology Chapter** and related memos. Instead of manually searching through documents, you can just ask the chatbot, and it will pull the relevant info for you.
 
 ---
