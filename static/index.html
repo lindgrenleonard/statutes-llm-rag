@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IT-Chapter Statutes LLM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="icon"
+      href="https://kth.it/en/icon?30514e4705d858d0"
+      type="image/png"
+      sizes="32x32"
+    />
+    <style>
+      :root {
+        --primary: #9b59b6;
+        --primary-hover: #8e44ad;
+        --primary-light: #e8d5f0;
+        --bg: #f5f0f8;
+        --bg-card: #ffffff;
+        --bg-input: #ffffff;
+        --border: #ddd0e6;
+        --text: #2c1a33;
+        --text-muted: #7a6485;
+        --text-inverse: #ffffff;
+        --shadow: 0 1px 3px rgba(100, 50, 120, 0.08);
+        --shadow-lg: 0 4px 12px rgba(100, 50, 120, 0.12);
+        --user-bubble: #9b59b6;
+        --assistant-bubble: #f5f0f8;
+        --assistant-bubble-text: #2c1a33;
+      }
+
+      [data-theme="dark"] {
+        --primary: #b07cc6;
+        --primary-hover: #9b59b6;
+        --primary-light: #3d2a4a;
+        --bg: #1a1025;
+        --bg-card: #251835;
+        --bg-input: #251835;
+        --border: #3d2a50;
+        --text: #e8ddf0;
+        --text-muted: #9a87a8;
+        --text-inverse: #ffffff;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
+        --user-bubble: #9b59b6;
+        --assistant-bubble: #251835;
+        --assistant-bubble-text: #e8ddf0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Open Sans", system-ui, "Segoe UI", Roboto, Helvetica, Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        background: var(--primary);
+        color: var(--text-inverse);
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: var(--shadow-lg);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .header-left .logo {
+        width: 36px;
+        height: 36px;
+      }
+
+      .header-left .logo polyline,
+      .header-left .logo path {
+        fill: var(--text-inverse);
+      }
+
+      .header-left .logo #Core {
+        fill: transparent;
+      }
+
+      header h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      header p {
+        font-size: 0.8rem;
+        opacity: 0.85;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .icon-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: var(--text-inverse);
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+
+      .icon-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      #chat-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .message {
+        display: flex;
+        flex-direction: column;
+        max-width: 80%;
+        animation: fadeIn 0.2s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.user {
+        align-self: flex-end;
+      }
+      .message.assistant {
+        align-self: flex-start;
+      }
+
+      .message-bubble {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        line-height: 1.6;
+        font-size: 0.925rem;
+        word-wrap: break-word;
+      }
+
+      .message.user .message-bubble {
+        background: var(--user-bubble);
+        color: var(--text-inverse);
+        border-bottom-right-radius: 4px;
+      }
+
+      .message.assistant .message-bubble {
+        background: var(--assistant-bubble);
+        color: var(--assistant-bubble-text);
+        border: 1px solid var(--border);
+        border-bottom-left-radius: 4px;
+      }
+
+      .message-bubble ul,
+      .message-bubble ol {
+        margin: 0.5rem 0;
+        padding-left: 1.25rem;
+      }
+
+      .message-bubble li {
+        margin: 0.25rem 0;
+      }
+
+      .message-bubble p {
+        margin: 0.4rem 0;
+      }
+      .message-bubble p:first-child {
+        margin-top: 0;
+      }
+      .message-bubble p:last-child {
+        margin-bottom: 0;
+      }
+
+      .message-bubble strong {
+        font-weight: 600;
+      }
+
+      .sources {
+        margin-top: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+
+      .sources-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text);
+      }
+
+      .source-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.15rem 0;
+      }
+
+      .source-score {
+        font-family: monospace;
+        font-size: 0.75rem;
+      }
+
+      .welcome {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-muted);
+      }
+
+      .welcome .welcome-logo {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 1rem;
+      }
+
+      .welcome .welcome-logo polyline,
+      .welcome .welcome-logo path {
+        fill: var(--primary);
+      }
+
+      .welcome .welcome-logo #Core {
+        fill: transparent;
+      }
+
+      .welcome h2 {
+        font-size: 1.5rem;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+      }
+
+      .welcome p {
+        margin-bottom: 1.5rem;
+      }
+
+      .suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+      }
+
+      .suggestion {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        font-family: inherit;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+        color: var(--text);
+      }
+
+      .suggestion:hover {
+        border-color: var(--primary);
+        box-shadow: var(--shadow);
+      }
+
+      #input-area {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        background: var(--bg);
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .input-wrapper {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+      }
+
+      #message-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 0.925rem;
+        font-family: inherit;
+        background: var(--bg-input);
+        color: var(--text);
+        resize: none;
+        min-height: 44px;
+        max-height: 120px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      #message-input:focus {
+        border-color: var(--primary);
+      }
+
+      #message-input::placeholder {
+        color: var(--text-muted);
+      }
+
+      #send-btn {
+        background: var(--primary);
+        color: var(--text-inverse);
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+        flex-shrink: 0;
+      }
+
+      #send-btn:hover {
+        background: var(--primary-hover);
+      }
+      #send-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .typing-indicator {
+        display: inline-flex;
+        gap: 4px;
+        padding: 0.5rem 0;
+      }
+
+      .typing-indicator span {
+        width: 6px;
+        height: 6px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out;
+      }
+
+      .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0.6);
+        }
+        40% {
+          transform: scale(1);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .message {
+          max-width: 90%;
+        }
+        .suggestions {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="header-left">
+        <svg
+          class="logo"
+          viewBox="0 0 566.93 566.93"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g id="Outer_Square">
+            <g id="Bottom_Right">
+              <polyline
+                points="488.55 286.35 546.01 286.62 566.93 307.55 541.83 332.65 520.91 311.73 468.99 305.92 488.55 286.35"
+              />
+              <polyline
+                points="465.73 309.18 516.72 315.91 537.65 336.83 512.54 361.93 491.62 341.01 446.16 328.74 465.73 309.18"
+              />
+              <polyline
+                points="442.9 332.01 487.44 345.2 508.36 366.11 483.26 391.21 462.34 370.3 423.33 351.58 442.9 332.01"
+              />
+              <polyline
+                points="420.07 354.84 458.15 374.48 479.07 395.4 453.97 420.5 433.05 399.58 400.5 374.41 420.07 354.84"
+              />
+              <polyline
+                points="397.24 377.67 428.87 403.77 449.79 424.68 424.68 449.79 403.77 428.87 377.67 397.23 397.24 377.67"
+              />
+              <polyline
+                points="374.41 400.49 399.58 433.05 420.5 453.97 395.4 479.07 374.48 458.15 354.83 420.07 374.41 400.49"
+              />
+              <polyline
+                points="351.58 423.33 370.3 462.34 391.22 483.26 366.11 508.36 345.2 487.44 332.01 442.89 351.58 423.33"
+              />
+              <polyline
+                points="328.75 446.16 341.01 491.62 361.93 512.54 336.83 537.64 315.91 516.72 309.18 465.73 328.75 446.16"
+              />
+              <polyline
+                points="305.92 468.99 311.73 520.91 332.65 541.83 307.54 566.93 286.63 546.01 286.35 488.55 305.92 468.99"
+              />
+            </g>
+            <g id="Top_Right">
+              <polyline
+                points="488.55 280.58 546.01 280.3 566.93 259.38 541.83 234.28 520.91 255.2 468.99 261.01 488.55 280.58"
+              />
+              <polyline
+                points="465.73 257.75 516.72 251.02 537.65 230.1 512.54 205 491.62 225.92 446.16 238.18 465.73 257.75"
+              />
+              <polyline
+                points="442.89 234.92 487.44 221.73 508.36 200.82 483.26 175.71 462.34 196.63 423.33 215.35 442.89 234.92"
+              />
+              <polyline
+                points="420.07 212.09 458.15 192.45 479.07 171.53 453.97 146.43 433.05 167.34 400.5 192.52 420.07 212.09"
+              />
+              <polyline
+                points="397.23 189.26 428.87 163.16 449.79 142.24 424.68 117.14 403.77 138.06 377.67 169.69 397.23 189.26"
+              />
+              <polyline
+                points="374.41 166.43 399.58 133.88 420.5 112.96 395.4 87.86 374.48 108.78 354.83 146.86 374.41 166.43"
+              />
+              <polyline
+                points="351.58 143.6 370.3 104.59 391.22 83.67 366.11 58.57 345.2 79.49 332.01 124.03 351.58 143.6"
+              />
+              <polyline
+                points="328.75 120.77 341.01 75.31 361.93 54.39 336.83 29.29 315.91 50.21 309.18 101.2 328.75 120.77"
+              />
+              <polyline
+                points="305.92 97.94 311.73 46.02 332.65 25.1 307.54 0 286.63 20.92 286.35 78.38 305.92 97.94"
+              />
+            </g>
+            <g id="Bottom_Left">
+              <polyline
+                points="78.38 286.35 20.92 286.62 0 307.55 25.1 332.65 46.02 311.73 97.94 305.92 78.38 286.35"
+              />
+              <polyline
+                points="101.2 309.18 50.21 315.91 29.28 336.83 54.39 361.93 75.31 341.01 120.77 328.74 101.2 309.18"
+              />
+              <polyline
+                points="124.03 332.01 79.49 345.2 58.57 366.11 83.67 391.21 104.59 370.3 143.6 351.58 124.03 332.01"
+              />
+              <polyline
+                points="146.86 354.84 108.78 374.48 87.86 395.4 112.96 420.5 133.88 399.58 166.43 374.41 146.86 354.84"
+              />
+              <polyline
+                points="169.69 377.67 138.06 403.77 117.14 424.68 142.24 449.79 163.16 428.87 189.26 397.23 169.69 377.67"
+              />
+              <polyline
+                points="192.52 400.49 167.34 433.05 146.43 453.97 171.53 479.07 192.45 458.15 212.09 420.07 192.52 400.49"
+              />
+              <polyline
+                points="215.35 423.33 196.63 462.34 175.71 483.26 200.82 508.36 221.73 487.44 234.92 442.89 215.35 423.33"
+              />
+              <polyline
+                points="238.18 446.16 225.92 491.62 205 512.54 230.1 537.64 251.02 516.72 257.75 465.73 238.18 446.16"
+              />
+              <polyline
+                points="261.01 468.99 255.2 520.91 234.28 541.83 259.39 566.93 280.3 546.01 280.58 488.55 261.01 468.99"
+              />
+            </g>
+            <g id="Top_Left">
+              <polyline
+                points="78.38 280.58 20.92 280.3 0 259.38 25.1 234.28 46.02 255.2 97.94 261.01 78.38 280.58"
+              />
+              <polyline
+                points="101.2 257.75 50.21 251.02 29.28 230.1 54.39 205 75.31 225.92 120.77 238.18 101.2 257.75"
+              />
+              <polyline
+                points="124.03 234.92 79.49 221.73 58.57 200.82 83.67 175.71 104.59 196.63 143.6 215.35 124.03 234.92"
+              />
+              <polyline
+                points="146.86 212.09 108.78 192.45 87.86 171.53 112.96 146.43 133.88 167.34 166.43 192.52 146.86 212.09"
+              />
+              <polyline
+                points="169.69 189.26 138.06 163.16 117.14 142.24 142.24 117.14 163.16 138.06 189.26 169.69 169.69 189.26"
+              />
+              <polyline
+                points="192.52 166.43 167.34 133.88 146.43 112.96 171.53 87.86 192.45 108.78 212.1 146.86 192.52 166.43"
+              />
+              <polyline
+                points="215.35 143.6 196.63 104.59 175.71 83.67 200.82 58.57 221.73 79.49 234.92 124.03 215.35 143.6"
+              />
+              <polyline
+                points="238.18 120.77 225.92 75.31 205 54.39 230.1 29.29 251.02 50.21 257.75 101.2 238.18 120.77"
+              />
+              <polyline
+                points="261.01 97.94 255.2 46.02 234.28 25.1 259.39 0 280.3 20.92 280.58 78.38 261.01 97.94"
+              />
+            </g>
+          </g>
+          <g id="Inner_Square">
+            <path
+              id="Core"
+              d="M283.47,481.27c-2.23,0-4.46-.85-6.17-2.55l-189.09-189.09c-3.4-3.4-3.4-8.93,0-12.33l170.55-170.55h49.4l170.55,170.55c3.4,3.4,3.4,8.93,0,12.33l-189.08,189.09c-1.7,1.7-3.93,2.55-6.17,2.55"
+            />
+          </g>
+          <g id="Letters">
+            <path
+              id="I"
+              d="M208.26,310.02l71.28-30.26c2.38-1.01,3.92-3.34,3.92-5.93v-140.17c0-1.76-2.41-2.24-3.09-.63l-74.23,174.87c-.56,1.33.78,2.68,2.11,2.11h0Z"
+            />
+            <path
+              id="T"
+              d="M194.82,331.07l82.86-16.86c3-.61,5.79,1.68,5.79,4.74v114.32c0,1.76,2.41,2.24,3.09.63l54.46-128.29c1.25-2.93,3.85-5.06,6.97-5.7l2.84-.58c3.64-.74,6.68-3.23,8.13-6.64l15.47-36.45c1.13-2.67-1.56-5.35-4.22-4.22l-176.64,74.99c-2.38,1.01-1.27,4.58,1.26,4.07Z"
+            />
+          </g>
+        </svg>
+        <div>
+          <h1>IT Chapter Statutes</h1>
+          <p>Ask questions about our statutes and memos</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">
+          <svg
+            id="theme-icon"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="resetChat()" title="New chat">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="1 4 1 10 7 10" />
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div id="chat-container">
+      <div class="welcome" id="welcome">
+        <svg
+          class="welcome-logo"
+          viewBox="0 0 566.93 566.93"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <g id="Outer_Square">
+            <g id="Bottom_Right">
+              <polyline
+                points="488.55 286.35 546.01 286.62 566.93 307.55 541.83 332.65 520.91 311.73 468.99 305.92 488.55 286.35"
+              />
+              <polyline
+                points="465.73 309.18 516.72 315.91 537.65 336.83 512.54 361.93 491.62 341.01 446.16 328.74 465.73 309.18"
+              />
+              <polyline
+                points="442.9 332.01 487.44 345.2 508.36 366.11 483.26 391.21 462.34 370.3 423.33 351.58 442.9 332.01"
+              />
+              <polyline
+                points="420.07 354.84 458.15 374.48 479.07 395.4 453.97 420.5 433.05 399.58 400.5 374.41 420.07 354.84"
+              />
+              <polyline
+                points="397.24 377.67 428.87 403.77 449.79 424.68 424.68 449.79 403.77 428.87 377.67 397.23 397.24 377.67"
+              />
+              <polyline
+                points="374.41 400.49 399.58 433.05 420.5 453.97 395.4 479.07 374.48 458.15 354.83 420.07 374.41 400.49"
+              />
+              <polyline
+                points="351.58 423.33 370.3 462.34 391.22 483.26 366.11 508.36 345.2 487.44 332.01 442.89 351.58 423.33"
+              />
+              <polyline
+                points="328.75 446.16 341.01 491.62 361.93 512.54 336.83 537.64 315.91 516.72 309.18 465.73 328.75 446.16"
+              />
+              <polyline
+                points="305.92 468.99 311.73 520.91 332.65 541.83 307.54 566.93 286.63 546.01 286.35 488.55 305.92 468.99"
+              />
+            </g>
+            <g id="Top_Right">
+              <polyline
+                points="488.55 280.58 546.01 280.3 566.93 259.38 541.83 234.28 520.91 255.2 468.99 261.01 488.55 280.58"
+              />
+              <polyline
+                points="465.73 257.75 516.72 251.02 537.65 230.1 512.54 205 491.62 225.92 446.16 238.18 465.73 257.75"
+              />
+              <polyline
+                points="442.89 234.92 487.44 221.73 508.36 200.82 483.26 175.71 462.34 196.63 423.33 215.35 442.89 234.92"
+              />
+              <polyline
+                points="420.07 212.09 458.15 192.45 479.07 171.53 453.97 146.43 433.05 167.34 400.5 192.52 420.07 212.09"
+              />
+              <polyline
+                points="397.23 189.26 428.87 163.16 449.79 142.24 424.68 117.14 403.77 138.06 377.67 169.69 397.23 189.26"
+              />
+              <polyline
+                points="374.41 166.43 399.58 133.88 420.5 112.96 395.4 87.86 374.48 108.78 354.83 146.86 374.41 166.43"
+              />
+              <polyline
+                points="351.58 143.6 370.3 104.59 391.22 83.67 366.11 58.57 345.2 79.49 332.01 124.03 351.58 143.6"
+              />
+              <polyline
+                points="328.75 120.77 341.01 75.31 361.93 54.39 336.83 29.29 315.91 50.21 309.18 101.2 328.75 120.77"
+              />
+              <polyline
+                points="305.92 97.94 311.73 46.02 332.65 25.1 307.54 0 286.63 20.92 286.35 78.38 305.92 97.94"
+              />
+            </g>
+            <g id="Bottom_Left">
+              <polyline
+                points="78.38 286.35 20.92 286.62 0 307.55 25.1 332.65 46.02 311.73 97.94 305.92 78.38 286.35"
+              />
+              <polyline
+                points="101.2 309.18 50.21 315.91 29.28 336.83 54.39 361.93 75.31 341.01 120.77 328.74 101.2 309.18"
+              />
+              <polyline
+                points="124.03 332.01 79.49 345.2 58.57 366.11 83.67 391.21 104.59 370.3 143.6 351.58 124.03 332.01"
+              />
+              <polyline
+                points="146.86 354.84 108.78 374.48 87.86 395.4 112.96 420.5 133.88 399.58 166.43 374.41 146.86 354.84"
+              />
+              <polyline
+                points="169.69 377.67 138.06 403.77 117.14 424.68 142.24 449.79 163.16 428.87 189.26 397.23 169.69 377.67"
+              />
+              <polyline
+                points="192.52 400.49 167.34 433.05 146.43 453.97 171.53 479.07 192.45 458.15 212.09 420.07 192.52 400.49"
+              />
+              <polyline
+                points="215.35 423.33 196.63 462.34 175.71 483.26 200.82 508.36 221.73 487.44 234.92 442.89 215.35 423.33"
+              />
+              <polyline
+                points="238.18 446.16 225.92 491.62 205 512.54 230.1 537.64 251.02 516.72 257.75 465.73 238.18 446.16"
+              />
+              <polyline
+                points="261.01 468.99 255.2 520.91 234.28 541.83 259.39 566.93 280.3 546.01 280.58 488.55 261.01 468.99"
+              />
+            </g>
+            <g id="Top_Left">
+              <polyline
+                points="78.38 280.58 20.92 280.3 0 259.38 25.1 234.28 46.02 255.2 97.94 261.01 78.38 280.58"
+              />
+              <polyline
+                points="101.2 257.75 50.21 251.02 29.28 230.1 54.39 205 75.31 225.92 120.77 238.18 101.2 257.75"
+              />
+              <polyline
+                points="124.03 234.92 79.49 221.73 58.57 200.82 83.67 175.71 104.59 196.63 143.6 215.35 124.03 234.92"
+              />
+              <polyline
+                points="146.86 212.09 108.78 192.45 87.86 171.53 112.96 146.43 133.88 167.34 166.43 192.52 146.86 212.09"
+              />
+              <polyline
+                points="169.69 189.26 138.06 163.16 117.14 142.24 142.24 117.14 163.16 138.06 189.26 169.69 169.69 189.26"
+              />
+              <polyline
+                points="192.52 166.43 167.34 133.88 146.43 112.96 171.53 87.86 192.45 108.78 212.1 146.86 192.52 166.43"
+              />
+              <polyline
+                points="215.35 143.6 196.63 104.59 175.71 83.67 200.82 58.57 221.73 79.49 234.92 124.03 215.35 143.6"
+              />
+              <polyline
+                points="238.18 120.77 225.92 75.31 205 54.39 230.1 29.29 251.02 50.21 257.75 101.2 238.18 120.77"
+              />
+              <polyline
+                points="261.01 97.94 255.2 46.02 234.28 25.1 259.39 0 280.3 20.92 280.58 78.38 261.01 97.94"
+              />
+            </g>
+          </g>
+          <g id="Inner_Square">
+            <path
+              id="Core"
+              d="M283.47,481.27c-2.23,0-4.46-.85-6.17-2.55l-189.09-189.09c-3.4-3.4-3.4-8.93,0-12.33l170.55-170.55h49.4l170.55,170.55c3.4,3.4,3.4,8.93,0,12.33l-189.08,189.09c-1.7,1.7-3.93,2.55-6.17,2.55"
+            />
+          </g>
+          <g id="Letters">
+            <path
+              id="I"
+              d="M208.26,310.02l71.28-30.26c2.38-1.01,3.92-3.34,3.92-5.93v-140.17c0-1.76-2.41-2.24-3.09-.63l-74.23,174.87c-.56,1.33.78,2.68,2.11,2.11h0Z"
+            />
+            <path
+              id="T"
+              d="M194.82,331.07l82.86-16.86c3-.61,5.79,1.68,5.79,4.74v114.32c0,1.76,2.41,2.24,3.09.63l54.46-128.29c1.25-2.93,3.85-5.06,6.97-5.7l2.84-.58c3.64-.74,6.68-3.23,8.13-6.64l15.47-36.45c1.13-2.67-1.56-5.35-4.22-4.22l-176.64,74.99c-2.38,1.01-1.27,4.58,1.26,4.07Z"
+            />
+          </g>
+        </svg>
+        <h2>IT-Chapter Statutes LLM</h2>
+        <p>
+          Ask me anything about the IT Chapter's statutes and organizational
+          memos.
+        </p>
+        <div class="suggestions">
+          <button class="suggestion" onclick="askSuggestion(this)">
+            What positions are in the board?
+          </button>
+          <button class="suggestion" onclick="askSuggestion(this)">
+            How many committees are there?
+          </button>
+          <button class="suggestion" onclick="askSuggestion(this)">
+            How are elections conducted?
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="input-area">
+      <div class="input-wrapper">
+        <textarea
+          id="message-input"
+          rows="1"
+          placeholder="Ask about statutes or memos..."
+          onkeydown="handleKeydown(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button id="send-btn" onclick="sendMessage()" title="Send">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const chatContainer = document.getElementById("chat-container");
+      const messageInput = document.getElementById("message-input");
+      const sendBtn = document.getElementById("send-btn");
+      let isStreaming = false;
+
+      function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute("data-theme");
+        html.setAttribute("data-theme", current === "dark" ? "light" : "dark");
+      }
+
+      function autoResize(el) {
+        el.style.height = "auto";
+        el.style.height = Math.min(el.scrollHeight, 120) + "px";
+      }
+
+      function handleKeydown(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      }
+
+      function askSuggestion(btn) {
+        messageInput.value = btn.textContent;
+        sendMessage();
+      }
+
+      function addMessage(role, content) {
+        const welcome = document.getElementById("welcome");
+        if (welcome) welcome.remove();
+
+        const msg = document.createElement("div");
+        msg.className = `message ${role}`;
+
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble";
+        bubble.innerHTML = content;
+
+        msg.appendChild(bubble);
+        chatContainer.appendChild(msg);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        return msg;
+      }
+
+      function formatMarkdown(text) {
+        let html = text
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.*?)\*/g, "<em>$1</em>");
+
+        const lines = html.split("\n");
+        let result = [];
+        let inList = false;
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (/^[-*]\s/.test(trimmed)) {
+            if (!inList) {
+              result.push("<ul>");
+              inList = true;
+            }
+            result.push(`<li>${trimmed.replace(/^[-*]\s/, "")}</li>`);
+          } else if (/^\d+\.\s/.test(trimmed)) {
+            if (!inList) {
+              result.push("<ol>");
+              inList = true;
+            }
+            result.push(`<li>${trimmed.replace(/^\d+\.\s/, "")}</li>`);
+          } else {
+            if (inList) {
+              result.push(
+                result[result.length - 2]?.startsWith("<ol>")
+                  ? "</ol>"
+                  : "</ul>",
+              );
+              inList = false;
+            }
+            if (trimmed) result.push(`<p>${trimmed}</p>`);
+          }
+        }
+        if (inList) result.push("</ul>");
+
+        return result.join("");
+      }
+
+      function addSources(messageEl, sources) {
+        if (!sources.length) return;
+
+        const div = document.createElement("div");
+        div.className = "sources";
+
+        let html = '<div class="sources-title">Sources</div>';
+        for (const s of sources) {
+          const name = s.file.replace(/\.md$/, "").replace(/_/g, " ");
+          const score =
+            s.score !== null
+              ? `<span class="source-score">${s.score}</span>`
+              : "";
+          html += `<div class="source-item"><span>${name}</span>${score}</div>`;
+        }
+        div.innerHTML = html;
+        messageEl.appendChild(div);
+      }
+
+      async function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text || isStreaming) return;
+
+        isStreaming = true;
+        sendBtn.disabled = true;
+        messageInput.value = "";
+        messageInput.style.height = "auto";
+
+        addMessage("user", text);
+
+        const msgEl = addMessage(
+          "assistant",
+          '<div class="typing-indicator"><span></span><span></span><span></span></div>',
+        );
+        const bubble = msgEl.querySelector(".message-bubble");
+
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text }),
+          });
+
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let fullText = "";
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+
+            for (const line of lines) {
+              if (!line.startsWith("data: ")) continue;
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+
+              const parsed = JSON.parse(data);
+              if (parsed.type === "token") {
+                fullText += parsed.content;
+                bubble.innerHTML = formatMarkdown(fullText);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+              } else if (parsed.type === "sources") {
+                addSources(msgEl, parsed.content);
+              }
+            }
+          }
+        } catch (err) {
+          bubble.innerHTML = `<p>Error: ${err.message}. Please try again.</p>`;
+        }
+
+        isStreaming = false;
+        sendBtn.disabled = false;
+        messageInput.focus();
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      async function resetChat() {
+        await fetch("/api/reset", { method: "POST" });
+        chatContainer.innerHTML = `
+                <div class="welcome" id="welcome">
+                    <svg class="welcome-logo" viewBox="0 0 566.93 566.93" xmlns="http://www.w3.org/2000/svg">
+                        <g id="Outer_Square">
+                            <g id="Bottom_Right"><polyline points="488.55 286.35 546.01 286.62 566.93 307.55 541.83 332.65 520.91 311.73 468.99 305.92 488.55 286.35"/><polyline points="465.73 309.18 516.72 315.91 537.65 336.83 512.54 361.93 491.62 341.01 446.16 328.74 465.73 309.18"/><polyline points="442.9 332.01 487.44 345.2 508.36 366.11 483.26 391.21 462.34 370.3 423.33 351.58 442.9 332.01"/><polyline points="420.07 354.84 458.15 374.48 479.07 395.4 453.97 420.5 433.05 399.58 400.5 374.41 420.07 354.84"/><polyline points="397.24 377.67 428.87 403.77 449.79 424.68 424.68 449.79 403.77 428.87 377.67 397.23 397.24 377.67"/><polyline points="374.41 400.49 399.58 433.05 420.5 453.97 395.4 479.07 374.48 458.15 354.83 420.07 374.41 400.49"/><polyline points="351.58 423.33 370.3 462.34 391.22 483.26 366.11 508.36 345.2 487.44 332.01 442.89 351.58 423.33"/><polyline points="328.75 446.16 341.01 491.62 361.93 512.54 336.83 537.64 315.91 516.72 309.18 465.73 328.75 446.16"/><polyline points="305.92 468.99 311.73 520.91 332.65 541.83 307.54 566.93 286.63 546.01 286.35 488.55 305.92 468.99"/></g>
+                            <g id="Top_Right"><polyline points="488.55 280.58 546.01 280.3 566.93 259.38 541.83 234.28 520.91 255.2 468.99 261.01 488.55 280.58"/><polyline points="465.73 257.75 516.72 251.02 537.65 230.1 512.54 205 491.62 225.92 446.16 238.18 465.73 257.75"/><polyline points="442.89 234.92 487.44 221.73 508.36 200.82 483.26 175.71 462.34 196.63 423.33 215.35 442.89 234.92"/><polyline points="420.07 212.09 458.15 192.45 479.07 171.53 453.97 146.43 433.05 167.34 400.5 192.52 420.07 212.09"/><polyline points="397.23 189.26 428.87 163.16 449.79 142.24 424.68 117.14 403.77 138.06 377.67 169.69 397.23 189.26"/><polyline points="374.41 166.43 399.58 133.88 420.5 112.96 395.4 87.86 374.48 108.78 354.83 146.86 374.41 166.43"/><polyline points="351.58 143.6 370.3 104.59 391.22 83.67 366.11 58.57 345.2 79.49 332.01 124.03 351.58 143.6"/><polyline points="328.75 120.77 341.01 75.31 361.93 54.39 336.83 29.29 315.91 50.21 309.18 101.2 328.75 120.77"/><polyline points="305.92 97.94 311.73 46.02 332.65 25.1 307.54 0 286.63 20.92 286.35 78.38 305.92 97.94"/></g>
+                            <g id="Bottom_Left"><polyline points="78.38 286.35 20.92 286.62 0 307.55 25.1 332.65 46.02 311.73 97.94 305.92 78.38 286.35"/><polyline points="101.2 309.18 50.21 315.91 29.28 336.83 54.39 361.93 75.31 341.01 120.77 328.74 101.2 309.18"/><polyline points="124.03 332.01 79.49 345.2 58.57 366.11 83.67 391.21 104.59 370.3 143.6 351.58 124.03 332.01"/><polyline points="146.86 354.84 108.78 374.48 87.86 395.4 112.96 420.5 133.88 399.58 166.43 374.41 146.86 354.84"/><polyline points="169.69 377.67 138.06 403.77 117.14 424.68 142.24 449.79 163.16 428.87 189.26 397.23 169.69 377.67"/><polyline points="192.52 400.49 167.34 433.05 146.43 453.97 171.53 479.07 192.45 458.15 212.09 420.07 192.52 400.49"/><polyline points="215.35 423.33 196.63 462.34 175.71 483.26 200.82 508.36 221.73 487.44 234.92 442.89 215.35 423.33"/><polyline points="238.18 446.16 225.92 491.62 205 512.54 230.1 537.64 251.02 516.72 257.75 465.73 238.18 446.16"/><polyline points="261.01 468.99 255.2 520.91 234.28 541.83 259.39 566.93 280.3 546.01 280.58 488.55 261.01 468.99"/></g>
+                            <g id="Top_Left"><polyline points="78.38 280.58 20.92 280.3 0 259.38 25.1 234.28 46.02 255.2 97.94 261.01 78.38 280.58"/><polyline points="101.2 257.75 50.21 251.02 29.28 230.1 54.39 205 75.31 225.92 120.77 238.18 101.2 257.75"/><polyline points="124.03 234.92 79.49 221.73 58.57 200.82 83.67 175.71 104.59 196.63 143.6 215.35 124.03 234.92"/><polyline points="146.86 212.09 108.78 192.45 87.86 171.53 112.96 146.43 133.88 167.34 166.43 192.52 146.86 212.09"/><polyline points="169.69 189.26 138.06 163.16 117.14 142.24 142.24 117.14 163.16 138.06 189.26 169.69 169.69 189.26"/><polyline points="192.52 166.43 167.34 133.88 146.43 112.96 171.53 87.86 192.45 108.78 212.1 146.86 192.52 166.43"/><polyline points="215.35 143.6 196.63 104.59 175.71 83.67 200.82 58.57 221.73 79.49 234.92 124.03 215.35 143.6"/><polyline points="238.18 120.77 225.92 75.31 205 54.39 230.1 29.29 251.02 50.21 257.75 101.2 238.18 120.77"/><polyline points="261.01 97.94 255.2 46.02 234.28 25.1 259.39 0 280.3 20.92 280.58 78.38 261.01 97.94"/></g>
+                        </g>
+                        <g id="Inner_Square"><path id="Core" d="M283.47,481.27c-2.23,0-4.46-.85-6.17-2.55l-189.09-189.09c-3.4-3.4-3.4-8.93,0-12.33l170.55-170.55h49.4l170.55,170.55c3.4,3.4,3.4,8.93,0,12.33l-189.08,189.09c-1.7,1.7-3.93,2.55-6.17,2.55"/></g>
+                        <g id="Letters"><path id="I" d="M208.26,310.02l71.28-30.26c2.38-1.01,3.92-3.34,3.92-5.93v-140.17c0-1.76-2.41-2.24-3.09-.63l-74.23,174.87c-.56,1.33.78,2.68,2.11,2.11h0Z"/><path id="T" d="M194.82,331.07l82.86-16.86c3-.61,5.79,1.68,5.79,4.74v114.32c0,1.76,2.41,2.24,3.09.63l54.46-128.29c1.25-2.93,3.85-5.06,6.97-5.7l2.84-.58c3.64-.74,6.68-3.23,8.13-6.64l15.47-36.45c1.13-2.67-1.56-5.35-4.22-4.22l-176.64,74.99c-2.38,1.01-1.27,4.58,1.26,4.07Z"/></g>
+                    </svg>
+                    <h2>IT Chapter Statutes Assistant</h2>
+                    <p>Ask me anything about the IT Chapter's statutes and organizational memos.</p>
+                    <div class="suggestions">
+                        <button class="suggestion" onclick="askSuggestion(this)">What positions are in the board?</button>
+                        <button class="suggestion" onclick="askSuggestion(this)">How many committees are there?</button>
+                        <button class="suggestion" onclick="askSuggestion(this)">How are elections conducted?</button>
+                    </div>
+                </div>`;
+      }
+
+      messageInput.focus();
+    </script>
+  </body>
+</html>

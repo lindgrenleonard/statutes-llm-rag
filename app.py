@@ -1,24 +1,24 @@
 import os
+import json
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from llama_index.llms.ollama import Ollama
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, StorageContext, load_index_from_storage
-from llama_index.core.node_parser import SemanticSplitterNodeParser
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.postprocessor import SentenceTransformerRerank
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.ollama import OllamaEmbedding
 
 PERSIST_DIR = "./storage"
 
-embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-base-en-v1.5", device="cpu")
+embed_model = OllamaEmbedding(model_name="nomic-embed-text", base_url="http://localhost:11434")
 Settings.embed_model = embed_model
 
 if os.path.exists(PERSIST_DIR):
     storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
     index = load_index_from_storage(storage_context)
 else:
-    splitter = SemanticSplitterNodeParser(
-        buffer_size=1,
-        breakpoint_percentile_threshold=95,
-        embed_model=embed_model,
-    )
+    splitter = SentenceSplitter(chunk_size=512, chunk_overlap=50)
 
     documents = SimpleDirectoryReader('documents').load_data()
     nodes = splitter.get_nodes_from_documents(documents)
@@ -32,7 +32,7 @@ reranker = SentenceTransformerRerank(
     device="cpu",
 )
 
-llm = Ollama(model="gemma3:4b", request_timeout=300.0, num_ctx=4096, temperature=0.3)
+llm = Ollama(model="gemma3:4b-it-qat", request_timeout=300.0, num_ctx=4096, temperature=0.3)
 
 SYSTEM_PROMPT = """You are a document assistant for the IT Chapter's statutes and memos.
 
@@ -52,28 +52,50 @@ chat_engine = index.as_chat_engine(
     system_prompt=SYSTEM_PROMPT,
 )
 
-print("===== Entering Chat REPL =====")
-print('Type "exit" to exit.\n')
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-while True:
-    message = input("You: ")
-    if message.strip().lower() == "exit":
-        break
 
-    response = chat_engine.stream_chat(message)
-    print("\nAssistant: ", end="", flush=True)
-    for token in response.response_gen:
-        print(token, end="", flush=True)
-    print()
+@app.get("/")
+async def root():
+    return FileResponse("static/index.html")
 
-    sources = response.source_nodes
-    if sources:
+
+@app.post("/api/chat")
+async def chat(request: Request):
+    body = await request.json()
+    message = body.get("message", "")
+
+    def stream():
+        response = chat_engine.stream_chat(message)
+        for token in response.response_gen:
+            yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+
+        sources = []
         seen = set()
-        print("\n📄 Sources:")
-        for node in sources:
+        for node in response.source_nodes:
             filename = node.metadata.get("file_name", "unknown")
             if filename not in seen:
                 seen.add(filename)
-                score = f" (score: {node.score:.3f})" if node.score is not None else ""
-                print(f"  - {filename}{score}")
-    print()
+                sources.append({
+                    "file": filename,
+                    "score": round(float(node.score), 3) if node.score is not None else None,
+                })
+        yield f"data: {json.dumps({'type': 'sources', 'content': sources})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(stream(), media_type="text/event-stream")
+
+
+@app.post("/api/reset")
+async def reset():
+    global chat_engine
+    chat_engine = index.as_chat_engine(
+        llm=llm,
+        similarity_top_k=10,
+        node_postprocessors=[reranker],
+        response_mode="compact",
+        streaming=True,
+        system_prompt=SYSTEM_PROMPT,
+    )
+    return {"status": "ok"}

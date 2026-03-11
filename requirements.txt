@@ -1,5 +1,7 @@
 llama-index
 llama-index-llms-ollama
-llama-index-embeddings-huggingface
+llama-index-embeddings-ollama
 llama-index-postprocessor-sbert-rerank
 sentence-transformers
+fastapi
+uvicorn
